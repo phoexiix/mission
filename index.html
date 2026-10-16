@@ -822,7 +822,7 @@
   <script>
   (function () {
     'use strict';
-    const GAS_URL = 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_EXEC_URL_HERE';
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwU-4dQ67f5GY4vDeqM1Y55Uk5QW-Q40BxLhp-tgw2ynglIYvmBqpIUK7pi8C_UC0qmag/exec';
     const validURL = /^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec(?:\?.*)?$/.test(GAS_URL);
     const token = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + Math.random();
     let bridgeReady = false;
