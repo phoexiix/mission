@@ -1,0 +1,1500 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root { 
+      --bg-dark: #0B0F19;
+      --card-bg: #111827;
+      --card-border: #1E293B;
+      --cyan-bright: #00D2FF;
+      --blue-accent: #3B82F6;
+      --blue-dark: #1D4ED8;
+      --text-main: #F8FAFC;
+      --text-muted: #94A3B8;
+      --green-status: #10B981;
+      --red-status: #EF4444;
+      --yellow-status: #F59E0B;
+      --sidebar-width: 260px;
+    }
+    
+    * { box-sizing: border-box; }
+    body { 
+      background: var(--bg-dark); 
+      color: var(--text-main); 
+      font-family: 'Prompt', sans-serif; 
+      margin: 0; 
+      overflow-x: hidden; 
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* Top Navigation Bar */
+    .nav { 
+      background: rgba(17, 24, 39, 0.9); 
+      backdrop-filter: blur(12px);
+      padding: 15px 30px; 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      border-bottom: 1px solid var(--card-border);
+      position: sticky; 
+      top: 0; 
+      z-index: 100; 
+      height: 65px;
+    }
+    
+    .brand { 
+      font-family: 'Montserrat', sans-serif; 
+      color: var(--cyan-bright); 
+      font-size: 1.3rem; 
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-shadow: 0 0 10px rgba(0, 210, 255, 0.4);
+    }
+
+    /* Login Screen */
+    #login-screen { 
+      height: calc(100vh - 65px); 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+    }
+
+    .card-login { 
+      background: var(--card-bg); 
+      padding: 40px; 
+      border-radius: 20px; 
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6); 
+      width: 320px; 
+      text-align: center; 
+      border: 1px solid var(--card-border);
+      border-top: 5px solid var(--cyan-bright); 
+    }
+
+    /* Layout System */
+    #app-layout {
+      display: none;
+      flex: 1;
+      display: flex;
+    }
+
+    /* Sidebar Navigation */
+    .sidebar {
+      width: var(--sidebar-width);
+      background: var(--card-bg);
+      border-right: 1px solid var(--card-border);
+      padding: 20px 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .nav-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-radius: 12px;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      font-family: 'Prompt';
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: left;
+      width: 100%;
+    }
+
+    .nav-btn:hover {
+      background: rgba(30, 41, 59, 0.6);
+      color: var(--text-main);
+    }
+
+    .nav-btn.active {
+      background: var(--blue-accent);
+      color: #FFF;
+      border-color: var(--cyan-bright);
+      box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+    }
+
+    /* Dropdown Sub-menu */
+    .submenu {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      padding-left: 20px;
+      margin-top: -3px;
+      margin-bottom: 5px;
+    }
+
+    .submenu-btn {
+      padding: 10px 14px;
+      border-radius: 8px;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      font-family: 'Prompt';
+      font-size: 0.82rem;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s;
+    }
+
+    .submenu-btn:hover {
+      background: rgba(59, 130, 246, 0.2);
+      color: var(--cyan-bright);
+    }
+
+    .submenu-btn.active {
+      background: rgba(0, 210, 255, 0.15);
+      color: var(--cyan-bright);
+      border-color: var(--cyan-bright);
+    }
+
+    /* Main Content Area */
+    .main-content {
+      flex: 1;
+      padding: 30px;
+      overflow-y: auto;
+      max-width: 1300px;
+    }
+
+    .section-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-top: 0;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 15px;
+    }
+
+    /* Table Styles */
+    .m-table { 
+      width: 100%; 
+      border-collapse: collapse; 
+      background: var(--card-bg); 
+      border-radius: 15px; 
+      overflow: hidden; 
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); 
+      border: 1px solid var(--card-border);
+    }
+
+    th { 
+      background: rgba(30, 41, 59, 0.6); 
+      padding: 15px; 
+      text-align: left; 
+      font-size: 0.75rem; 
+      color: var(--cyan-bright); 
+      text-transform: uppercase; 
+      letter-spacing: 1px;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    td { 
+      padding: 15px; 
+      border-bottom: 1px solid var(--card-border); 
+      font-size: 0.9rem; 
+      vertical-align: middle; 
+      background: var(--card-bg); 
+      color: var(--text-main);
+    }
+
+    /* Status Badges */
+    .badge { 
+      padding: 6px 14px; 
+      border-radius: 20px; 
+      font-size: 0.75rem; 
+      font-weight: 700; 
+      border: 1px solid; 
+      text-transform: uppercase; 
+      display: inline-block;
+      outline: none;
+      font-family: 'Prompt';
+      background: transparent;
+    }
+
+    .badge-open { background: rgba(0, 210, 255, 0.1); color: var(--cyan-bright); border-color: var(--cyan-bright); }
+    .badge-completed { background: rgba(16, 185, 129, 0.1); color: var(--green-status); border-color: var(--green-status); }
+    .badge-failed { background: rgba(239, 68, 68, 0.1); color: var(--red-status); border-color: var(--red-status); }
+    .badge-hold { background: rgba(245, 158, 11, 0.1); color: var(--yellow-status); border-color: var(--yellow-status); }
+
+    /* Modal Styles */
+    .modal { 
+      display: none; 
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      width: 100%; 
+      height: 100%; 
+      background: rgba(0, 0, 0, 0.75); 
+      backdrop-filter: blur(8px); 
+      z-index: 1000; 
+      align-items: center; 
+      justify-content: center; 
+    }
+
+    .modal-content { 
+      background: var(--card-bg); 
+      padding: 30px; 
+      border-radius: 20px; 
+      width: 480px; 
+      max-width: 90%;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8); 
+      border: 1px solid var(--card-border);
+      border-top: 6px solid var(--cyan-bright); 
+      max-height: 90vh; 
+      overflow-y: auto; 
+    }
+
+    .modal-wide {
+      width: 85%;
+      max-width: 1100px;
+    }
+
+    /* Form Controls */
+    input, select, textarea { 
+      width: 100%; 
+      padding: 12px; 
+      margin: 8px 0; 
+      background: var(--bg-dark);
+      color: var(--text-main);
+      border: 1px solid var(--card-border); 
+      border-radius: 10px; 
+      box-sizing: border-box; 
+      font-family: 'Prompt'; 
+      font-size: 0.95rem; 
+      transition: border-color 0.2s;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--cyan-bright);
+      box-shadow: 0 0 8px rgba(0, 210, 255, 0.3);
+    }
+
+    select option {
+      background: var(--card-bg);
+      color: var(--text-main);
+    }
+
+    /* Buttons */
+    .btn-action {
+      background: var(--blue-accent);
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-family: 'Prompt';
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-action:hover {
+      background: var(--blue-dark);
+      box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+    }
+
+    .btn-submit { 
+      background: var(--blue-accent); 
+      color: white; 
+      border: none; 
+      padding: 14px; 
+      width: 100%; 
+      border-radius: 10px; 
+      cursor: pointer; 
+      font-weight: 700; 
+      font-family: 'Prompt';
+      transition: all 0.2s ease;
+      margin-top: 10px;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    .btn-submit:hover {
+      background: var(--blue-dark);
+      box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+    }
+
+    .btn-disabled {
+      background: #334155 !important;
+      color: var(--text-muted) !important;
+      cursor: not-allowed !important;
+      box-shadow: none !important;
+      opacity: 0.6 !important;
+    }
+
+    /* Cards System */
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+    /* Dynamic Border Color Spy Cards */
+    .spy-card { 
+      background: var(--card-bg); 
+      border-radius: 15px; 
+      padding: 20px; 
+      border: 1px solid var(--card-border);
+      border-left: 6px solid var(--blue-accent); 
+      cursor: pointer; 
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2); 
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .spy-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 0 15px rgba(0, 210, 255, 0.3);
+    }
+
+    /* Spy Status Border Colors */
+    .spy-status-active { border-left-color: var(--green-status) !important; }
+    .spy-status-available { border-left-color: var(--cyan-bright) !important; }
+    .spy-status-standby { border-left-color: #94A3B8 !important; }
+    .spy-status-undercover { border-left-color: var(--yellow-status) !important; }
+    .spy-status-leave { border-left-color: #F97316 !important; }
+    .spy-status-kia { border-left-color: var(--red-status) !important; }
+
+    /* SweetAlert2 Custom Dark Theme */
+    .swal2-popup {
+      background: var(--card-bg) !important;
+      color: var(--text-main) !important;
+      border: 1px solid var(--card-border) !important;
+      border-radius: 15px !important;
+    }
+    .swal2-title, .swal2-html-container {
+      color: var(--text-main) !important;
+    }
+    .swal2-input {
+      background: var(--bg-dark) !important;
+      color: var(--text-main) !important;
+      border-color: var(--card-border) !important;
+    }
+
+    @media screen and (max-width: 768px) {
+      #app-layout { flex-direction: column; }
+      .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--card-border); }
+      .main-content { padding: 20px; }
+      .m-table thead { display: none; }
+      .m-table tr { display: block; border-bottom: 5px solid var(--bg-dark); padding: 15px; background: var(--card-bg); }
+      .m-table td { display: block; padding: 8px 0; border: none; }
+      .m-table td::before { content: attr(data-label); font-weight: 700; color: var(--cyan-bright); font-size: 0.7rem; display: block; text-transform: uppercase; }
+      .modal-wide-grid { grid-template-columns: 1fr !important; }
+      .modal-wide { width: 95%; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <div class="nav">
+    <div class="brand">PHOENIX COMMAND</div>
+    <div id="user-info" style="display:none; font-size: 0.85rem;">
+      Agent: <b id="agent-name" style="color:var(--cyan-bright)"></b>
+    </div>
+  </div>
+
+  <!-- Login Screen -->
+  <div id="login-screen">
+    <div class="card-login">
+      <h2 style="margin-top:0; color:var(--text-main);">Intelligence Access</h2>
+      <input type="text" id="user" placeholder="Agent ID">
+      <input type="password" id="pass" placeholder="Passphrase">
+      <button class="btn-submit" onclick="doLogin()">AUTHENTICATE</button>
+    </div>
+  </div>
+
+  <!-- Main Application Layout -->
+  <div id="app-layout">
+    
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+      <button id="nav-dashboard" class="nav-btn active" onclick="switchPage('dashboard')">
+        <span>📊 ศูนย์ควบคุม & สถานการณ์</span>
+      </button>
+
+      <!-- Operations Dropdown Button -->
+      <button id="nav-missions-parent" class="nav-btn" onclick="toggleMissionsDropdown()">
+        <span>🚀 ศูนย์ปฏิบัติการ & ภารกิจ</span>
+        <span id="dropdown-arrow">▼</span>
+      </button>
+      
+      <!-- Operations Dropdown Submenu -->
+      <div id="missions-submenu" class="submenu">
+        <button id="nav-missions-general" class="submenu-btn" onclick="switchPage('missions-general')">
+          🔹 ภารกิจทั่วไป
+        </button>
+        <button id="nav-missions-special" class="submenu-btn" onclick="switchPage('missions-special')">
+          🔹 ภารกิจปฏิบัติการพิเศษ
+        </button>
+      </div>
+
+      <button id="nav-spies" class="nav-btn" onclick="switchPage('spies')">
+        <span>🕵️‍♂️ ฐานข้อมูลสายลับ</span>
+      </button>
+
+      <button id="nav-master" class="nav-btn" onclick="switchPage('master')">
+        <span>📖 คลังรหัสปฏิบัติการ</span>
+      </button>
+    </div>
+
+    <!-- Main Content Display -->
+    <div class="main-content">
+
+      <!-- SECTION 1: DASHBOARD & SITUATION (หน้าแรก) -->
+      <div id="page-dashboard" class="page-view">
+        <div class="section-title">
+          <span>📊 ศูนย์ควบคุมและสถานการณ์สด (SYSTEM CONTROL)</span>
+          <div>
+            <button class="btn-action" style="background:var(--green-status);" onclick="openSituationUpdateModal()">📢 อัปเดตสถานการณ์</button>
+            <button class="btn-action" style="background:var(--blue-accent);" onclick="openModal('st-modal')">⚙ ปรับรหัสเตือนภัย</button>
+          </div>
+        </div>
+
+        <!-- Top Situation Row -->
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:20px; margin-bottom:25px;">
+          <!-- Situation Card -->
+          <div class="stat-card" style="border-left: 5px solid var(--cyan-bright); cursor:pointer;" onclick="viewSitDetails()">
+            <small style="color:var(--text-muted); font-weight:600;">CURRENT SITUATION CODE</small>
+            <div id="sit-display" style="font-weight:700; color:var(--cyan-bright); font-size:1.3rem; margin-top:5px;">...</div>
+            <div id="sit-th-display" style="font-size:0.85rem; color:var(--text-muted); margin-top:3px;">(...)</div>
+          </div>
+          <!-- Org Status -->
+          <div class="stat-card" style="border-left: 5px solid var(--blue-accent);">
+            <small style="color:var(--text-muted); font-weight:600;">ORGANIZATION STATUS</small>
+            <div id="o-status" style="font-weight:700; font-size:1.2rem; margin-top:5px;">...</div>
+          </div>
+          <!-- Center Condition -->
+          <div class="stat-card" style="border-left: 5px solid var(--green-status);">
+            <small style="color:var(--text-muted); font-weight:600;">CENTER CONDITION</small>
+            <div id="c-status" style="font-weight:700; font-size:1.2rem; margin-top:5px;">...</div>
+          </div>
+        </div>
+
+        <!-- DASHBOARD SUMMARY CARDS -->
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:15px; margin-bottom:30px;">
+          <div class="stat-card" style="background: rgba(17, 24, 39, 0.8); border-color: rgba(59, 130, 246, 0.3);">
+            <small style="color:var(--text-muted); font-size:0.8rem;">ภารกิจทั้งหมด (Total Ops)</small>
+            <div id="dash-total-ops" style="font-size:1.8rem; font-weight:800; color:var(--cyan-bright); margin-top:5px;">0</div>
+          </div>
+          <div class="stat-card" style="background: rgba(17, 24, 39, 0.8); border-color: rgba(0, 210, 255, 0.3);">
+            <small style="color:var(--text-muted); font-size:0.8rem;">กำลังดำเนินอยู่ (Active Ops)</small>
+            <div id="dash-open-ops" style="font-size:1.8rem; font-weight:800; color:var(--cyan-bright); margin-top:5px;">0</div>
+          </div>
+          <div class="stat-card" style="background: rgba(17, 24, 39, 0.8); border-color: rgba(16, 185, 129, 0.3);">
+            <small style="color:var(--text-muted); font-size:0.8rem;">สำเร็จแล้ว (Completed)</small>
+            <div id="dash-completed-ops" style="font-size:1.8rem; font-weight:800; color:var(--green-status); margin-top:5px;">0</div>
+          </div>
+          <div class="stat-card" style="background: rgba(17, 24, 39, 0.8); border-color: rgba(245, 158, 11, 0.3);">
+            <small style="color:var(--text-muted); font-size:0.8rem;">จำนวนสายลับทั้งหมด (Agents)</small>
+            <div id="dash-total-spies" style="font-size:1.8rem; font-weight:800; color:var(--yellow-status); margin-top:5px;">0</div>
+          </div>
+        </div>
+
+        <!-- READ-ONLY DASHBOARD OPERATIONS TABLE -->
+        <h3 style="color:var(--cyan-bright); margin-bottom:15px; font-size:1.1rem;">📋 รายการภารกิจทั่วไปทั้งหมดในระบบ (General Operations Overview - Read Only)</h3>
+        <table class="m-table">
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Operation & Target</th>
+              <th>Commander</th>
+              <th>Security</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="dash-m-body"></tbody>
+        </table>
+      </div>
+
+      <!-- SECTION 2A: GENERAL OPERATIONS -->
+      <div id="page-missions-general" class="page-view" style="display:none;">
+        <div class="section-title">
+          <span>🚀 ศูนย์ปฏิบัติการภารกิจทั่วไป (GENERAL OPERATIONS BOARD)</span>
+          <button class="btn-action" style="background:var(--cyan-bright); color:#000;" onclick="openModal('m-modal')">+ สร้างภารกิจทั่วไปใหม่</button>
+        </div>
+
+        <table class="m-table">
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Operation & Target</th>
+              <th>Commander</th>
+              <th>Security</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="m-body"></tbody>
+        </table>
+      </div>
+
+      <!-- SECTION 2B: SPECIAL OPS -->
+      <div id="page-missions-special" class="page-view" style="display:none;">
+        <div class="section-title">
+          <span>⚡ ภารกิจปฏิบัติการพิเศษ (SPECIAL TACTICAL OPERATIONS)</span>
+        </div>
+        
+        <div class="stat-card" style="text-align:center; padding:50px; border: 2px dashed var(--cyan-bright); background: rgba(0, 210, 255, 0.03);">
+          <h2 style="color:var(--cyan-bright); margin-top:0;">🛡️ SPECIAL OPERATIONS & TACTICAL TEAMS MODULE</h2>
+          <p style="color:var(--text-muted); max-width:600px; margin:0 auto 20px auto;">
+            ส่วนงานนี้ถูกเตรียมไว้สำหรับจัดการทีมปฏิบัติการพิเศษเชิงยุทธวิธี (Special Tactical Teams)
+          </p>
+          <span style="background:rgba(59, 130, 246, 0.2); color:var(--cyan-bright); padding:8px 20px; border-radius:20px; font-size:0.85rem; border:1px solid var(--blue-accent);">
+            SYSTEM READY FOR EXPANSION
+          </span>
+        </div>
+      </div>
+
+      <!-- SECTION 3: SPY DATABASE & MISSIONS -->
+      <div id="page-spies" class="page-view" style="display:none;">
+        <div class="section-title">
+          <span>🕵️‍♂️ ฐานข้อมูลสายลับปฏิบัติการ (SPY DATABASE)</span>
+          <button class="btn-action" style="background:var(--cyan-bright); color:#000;" onclick="openModal('add-spy-modal')">+ เพิ่มสายลับใหม่</button>
+        </div>
+
+        <!-- รายชื่อสายลับ Grid -->
+        <div id="s-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:20px; margin-bottom:40px;"></div>
+
+        <!-- DASHBOARD สรุปสายลับทั้งหมด -->
+        <div class="section-title" style="margin-top:20px;">
+          <span>📈 สรุปภาพรวมสถานะสายลับ (SPY ANALYTICS DASHBOARD)</span>
+        </div>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-bottom:25px;">
+          <div class="stat-card" style="border-top:4px solid var(--green-status)">
+            <small style="color:var(--text-muted);">🟢 Active Duty</small>
+            <div id="spy-stat-active" style="font-size:1.5rem; font-weight:700; color:var(--green-status); margin-top:5px;">0</div>
+          </div>
+          <div class="stat-card" style="border-top:4px solid var(--cyan-bright)">
+            <small style="color:var(--text-muted);">🔵 Available</small>
+            <div id="spy-stat-available" style="font-size:1.5rem; font-weight:700; color:var(--cyan-bright); margin-top:5px;">0</div>
+          </div>
+          <div class="stat-card" style="border-top:4px solid #94A3B8">
+            <small style="color:var(--text-muted);">⚪ On Standby</small>
+            <div id="spy-stat-standby" style="font-size:1.5rem; font-weight:700; color:#94A3B8; margin-top:5px;">0</div>
+          </div>
+          <div class="stat-card" style="border-top:4px solid var(--yellow-status)">
+            <small style="color:var(--text-muted);">🟡 Undercover</small>
+            <div id="spy-stat-undercover" style="font-size:1.5rem; font-weight:700; color:var(--yellow-status); margin-top:5px;">0</div>
+          </div>
+          <div class="stat-card" style="border-top:4px solid #F97316">
+            <small style="color:var(--text-muted);">🟠 On Leave</small>
+            <div id="spy-stat-leave" style="font-size:1.5rem; font-weight:700; color:#F97316; margin-top:5px;">0</div>
+          </div>
+          <div class="stat-card" style="border-top:4px solid var(--red-status)">
+            <small style="color:var(--text-muted);">🔴 KIA</small>
+            <div id="spy-stat-kia" style="font-size:1.5rem; font-weight:700; color:var(--red-status); margin-top:5px;">0</div>
+          </div>
+        </div>
+
+        <!-- Spy Readiness Progress Bar -->
+        <div class="stat-card" style="margin-bottom:30px;">
+          <small style="color:var(--text-muted); font-weight:600;">PERCENTAGE OF FIELD READINESS (อัตราความพร้อมปฏิบัติการ)</small>
+          <div style="display:flex; align-items:center; gap:15px; margin-top:10px;">
+            <div style="flex:1; background:var(--bg-dark); height:15px; border-radius:10px; overflow:hidden; border:1px solid var(--card-border);">
+              <div id="spy-readiness-bar" style="width:0%; height:100%; background:linear-gradient(90deg, var(--blue-accent), var(--cyan-bright)); transition:width 0.5s;"></div>
+            </div>
+            <span id="spy-readiness-percent" style="font-weight:800; color:var(--cyan-bright);">0%</span>
+          </div>
+        </div>
+
+        <!-- SPY MISSIONS OVERVIEW TABLE -->
+        <div class="section-title">
+          <span>🎯 รายการภารกิจของสายลับทั้งหมด (SPY OPERATIONS BOARD)</span>
+        </div>
+        <table class="m-table">
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Spy Operation & Target</th>
+              <th>Assigned Spy Agent</th>
+              <th>Clearance</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="spy-m-body"></tbody>
+        </table>
+      </div>
+
+      <!-- SECTION 4: MASTER DATA -->
+      <div id="page-master" class="page-view" style="display:none;">
+        <div class="section-title">
+          <span>📖 คลังรหัสสถานการณ์และโปรโตคอล (DATA CODE MASTER)</span>
+        </div>
+        <table class="m-table">
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>English Title</th>
+              <th>ชื่อภาษาไทย</th>
+              <th>คำอธิบายโปรโตคอล</th>
+            </tr>
+          </thead>
+          <tbody id="master-body"></tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODALS SYSTEM -->
+
+  <!-- Modal: Add New Spy -->
+  <div id="add-spy-modal" class="modal">
+    <div class="modal-content" style="border-top-color: var(--cyan-bright);">
+      <h3 style="margin-top:0; color:var(--cyan-bright);">🕵️‍♂️ เพิ่มสายลับปฏิบัติการใหม่</h3>
+      <input type="text" id="newSpyId" placeholder="Agent ID (เช่น 009, 102)">
+      <input type="text" id="newSpyName" placeholder="ชื่อ-นามสกุล / Code Name">
+      <input type="text" id="newSpySkill" placeholder="ความสามารถเฉพาะทาง (เช่น แทรกซึม, จารกรรมข้อมูล)">
+      <input type="text" id="newSpyField" placeholder="พื้นที่ปฏิบัติการประจำ (เช่น กรุงเทพฯ, เหนือ)">
+      <label style="font-size:0.8rem; color:var(--text-muted); margin-top:5px; display:block;">สถานะแรกเริ่ม:</label>
+      <select id="newSpyStatus">
+        <option value="🔵 Available (ว่าง / พร้อมปฏิบัติการ)" selected>🔵 Available (ว่าง / พร้อมปฏิบัติการ)</option>
+        <option value="⚪ On Standby (รอรับภารกิจ)">⚪ On Standby (รอรับภารกิจ)</option>
+        <option value="🟡 Undercover (แฝงตัว)">🟡 Undercover (แฝงตัว)</option>
+      </select>
+      <button class="btn-submit" style="background:var(--cyan-bright); color:#000;" onclick="submitNewSpy()">ADD SPY AGENT</button>
+      <button class="btn-submit" style="background:var(--card-border); color:var(--text-main);" onclick="closeModal()">CANCEL</button>
+    </div>
+  </div>
+
+  <!-- Modal: System Status Override -->
+  <div id="st-modal" class="modal">
+    <div class="modal-content modal-wide">
+      <h3 style="margin-top:0; color:var(--cyan-bright);">⚙️ SYSTEM STATUS OVERRIDE</h3>
+      
+      <div class="modal-wide-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:20px;">
+        <!-- Left: Center Condition -->
+        <div style="background:var(--bg-dark); padding:18px; border-radius:12px; border:1px solid var(--card-border);">
+          <label style="font-size:0.9rem; font-weight:700; color:var(--green-status); display:block; margin-bottom:8px;">
+            1. Center Condition (สภาวะศูนย์ปฏิบัติการ)
+          </label>
+          <select id="st-code-center">
+            <option value="🔴 Red Code">🔴 Red Code</option>
+            <option value="⚫ Black Code">⚫ Black Code</option>
+            <option value="⚪ White Code">⚪ White Code</option>
+            <option value="🟢 Green Code" selected>🟢 Green Code</option>
+            <option value="🔵 Blue Code">🔵 Blue Code</option>
+            <option value="🟡 Yellow Code">🟡 Yellow Code</option>
+          </select>
+        </div>
+
+        <!-- Right: Organization Status -->
+        <div style="background:var(--bg-dark); padding:18px; border-radius:12px; border:1px solid var(--card-border);">
+          <label style="font-size:0.9rem; font-weight:700; color:var(--blue-accent); display:block; margin-bottom:8px;">
+            2. Organization Status (สถานะองค์กร)
+          </label>
+          <select id="st-code-org">
+            <option value="🔴 Red Code">🔴 Red Code</option>
+            <option value="⚫ Black Code">⚫ Black Code</option>
+            <option value="⚪ White Code" selected>⚪ White Code</option>
+            <option value="🟢 Green Code">🟢 Green Code</option>
+            <option value="🔵 Blue Code">🔵 Blue Code</option>
+            <option value="🟡 Yellow Code">🟡 Yellow Code</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Color Codes Reference Legend -->
+      <div style="background: rgba(15, 23, 42, 0.8); padding: 15px 20px; border-radius: 12px; border: 1px dashed var(--card-border); margin-bottom: 20px;">
+        <small style="color:var(--cyan-bright); font-weight:700; display:block; margin-bottom:10px; font-size:0.85rem;">📖 คำอธิบายระดับรหัสสีเตือนภัย (Security Color Codes):</small>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:10px; font-size:0.85rem; color:var(--text-muted);">
+          <div>🔴 <b>Red Code:</b> ภัยคุกคามร้ายแรง</div>
+          <div>⚫ <b>Black Code:</b> วิกฤตขั้นสุด</div>
+          <div>⚪ <b>White Code:</b> เคลียร์พื้นที่</div>
+          <div>🟢 <b>Green Code:</b> สถานการณ์ปกติ</div>
+          <div>🔵 <b>Blue Code:</b> ควบคุมพื้นที่</div>
+          <div>🟡 <b>Yellow Code:</b> เฝ้าระวังระดับสูง</div>
+        </div>
+      </div>
+
+      <button class="btn-submit" style="background:var(--blue-accent)" onclick="submitStatusBoth()">UPDATE SYSTEM STATUS</button>
+      <button class="btn-submit" style="background:var(--card-border); color:var(--text-main);" onclick="closeModal()">CANCEL</button>
+    </div>
+  </div>
+
+  <!-- Modal: Spy Details -->
+  <div id="spy-det" class="modal">
+    <div class="modal-content" style="border-top-color: var(--blue-accent);">
+      <h3 id="sd-name" style="color:var(--cyan-bright); margin:0;"></h3>
+      <p id="sd-id" style="font-size:0.8rem; color:var(--text-muted); margin-top:2px; margin-bottom:10px;"></p>
+      <hr style="border:0; border-top:1px solid var(--card-border);">
+      
+      <div style="font-size:0.9rem; margin:15px 0; line-height:1.8;">
+        <b>Current Status:</b>
+        <select id="spyStatusSelect" style="width: auto; padding: 5px 8px; margin: 0 5px; display:inline-block;">
+          <option value="🟢 Active Duty (ปฏิบัติภารกิจ)">🟢 Active Duty</option>
+          <option value="🔵 Available (ว่าง / พร้อมปฏิบัติการ)">🔵 Available</option>
+          <option value="⚪ On Standby (รอรับภารกิจ)">⚪ On Standby</option>
+          <option value="🟡 Undercover (แฝงตัว)">🟡 Undercover</option>
+          <option value="🟠 พักภาระกิจ (On Leave)">🟠 พักภาระกิจ (On Leave)</option>
+          <option value="🔴 KIA (Deceased)">🔴 KIA (Deceased)</option>
+        </select><br>
+        <b>Skill:</b> <span id="sd-skill" style="color:var(--text-muted);">-</span><br>
+        <b>Field:</b> <span id="sd-field" style="color:var(--text-muted);">-</span>
+      </div>
+
+      <div style="background:var(--bg-dark); padding:15px; border-radius:12px; border:1px solid var(--card-border); margin-bottom:15px;">
+        <small style="color:var(--cyan-bright); font-weight:700; text-transform:uppercase;">🎯 Assigned Active Mission (ภารกิจปัจจุบัน)</small>
+        <div id="spy-assigned-mission" style="margin-top:8px; font-size:0.85rem; color:var(--text-muted);">
+          ไม่มีภารกิจที่กำลังปฏิบัติการอยู่
+        </div>
+      </div>
+
+      <button id="btn-assign-spy" class="btn-submit" style="background:var(--blue-accent)">+ DEPLOY MISSION TO THIS AGENT</button>
+      <p id="spy-warn" style="color:var(--red-status); font-size:0.75rem; text-align:center; display:none; margin-top:8px;">* สายลับสถานะ KIA หรือ พักภาระกิจ ไม่สามารถรับภารกิจได้</p>
+      <button class="btn-submit" style="background:var(--card-border); color:var(--text-main);" onclick="closeModal()">CLOSE</button>
+    </div>
+  </div>
+
+  <!-- Modal: Deploy Spy Mission -->
+  <div id="spy-mission-modal" class="modal">
+    <div class="modal-content" style="border-top-color: var(--blue-accent);">
+      <h3 style="color:var(--cyan-bright); margin-top:0;">Assign Spy Operation</h3>
+      <p style="font-size:0.85rem; background:rgba(0,210,255,0.1); padding:10px; border-radius:8px; color:var(--cyan-bright); margin-bottom:15px; border:1px solid rgba(0,210,255,0.2);">
+        Target Agent: <b id="target-spy-name"></b>
+      </p>
+      <input type="text" id="spyOpName" placeholder="Spy Operation Name">
+      <input type="text" id="spyTarget" placeholder="เป้าหมายหลัก / Objective">
+      <textarea id="spyDetails" rows="3" placeholder="Classified Details"></textarea>
+      <label style="font-size:0.8rem; color:var(--text-muted);">Security Clearance:</label>
+      <select id="spySecurity">
+        <option>Level 1: UNCLASSIFIED</option>
+        <option>Level 2: CONFIDENTIAL</option>
+        <option selected>Level 3: SECRET</option>
+        <option>Level 4: TOP SECRET</option>
+        <option>Level 5: COSMIC</option>
+      </select>
+      <button class="btn-submit" style="background:var(--blue-accent)" onclick="submitMission(true)">DEPLOY SPY</button>
+      <button class="btn-submit" style="background:var(--card-border); color:var(--text-main);" onclick="closeModal()">CANCEL</button>
+    </div>
+  </div>
+
+  <!-- Modal: New General Operation -->
+  <div id="m-modal" class="modal">
+    <div class="modal-content">
+      <h3 style="margin-top:0; color:var(--cyan-bright);">🚀 New General Operation</h3>
+      <select id="opSelect" onchange="updateOpTypeDisplay()"></select>
+      <div id="opTypeDisplay" style="font-size:0.85rem; color:var(--cyan-bright); font-weight:600; background:rgba(0,210,255,0.1); padding:10px; border-radius:10px; margin-bottom:10px; border:1px solid rgba(0,210,255,0.2);">
+        ประเภท: <span id="opTypeText">-</span>
+      </div>
+      <input type="text" id="mTarget" placeholder="ระบุเป้าหมายหลัก (เช่น อาคารศูนย์ราชการ, ท่าเรือแหลมฉบัง)">
+      <textarea id="mDetails" rows="3" placeholder="รายละเอียด/โปรโตคอลยุทธวิธี..."></textarea>
+      <select id="mSecurity">
+        <option selected>Level 3: SECRET</option>
+        <option>Level 4: TOP SECRET</option>
+        <option>Level 5: COSMIC</option>
+      </select>
+      <button class="btn-submit" onclick="submitMission(false)">DEPLOY MISSION</button>
+      <button class="btn-submit" style="background:var(--card-border); color:var(--text-main);" onclick="closeModal()">CANCEL</button>
+    </div>
+  </div>
+
+  <!-- Modal: Update Situation -->
+  <div id="sit-modal" class="modal">
+    <div class="modal-content" style="border-top-color: var(--green-status);">
+      <h3 style="color:var(--green-status); margin-top:0;">📢 Update Current Situation</h3>
+      <select id="sitSelect" onchange="previewSituation()"></select>
+      <div id="sitPreview" style="font-size:0.85rem; background:rgba(16,185,129,0.1); padding:10px; border-radius:10px; margin:10px 0; border:1px solid rgba(16,185,129,0.2); color:var(--green-status);">
+        <b>คำอธิบาย:</b> <span id="sitPreviewDes">-</span>
+      </div>
+      <textarea id="sitNote" rows="3" placeholder="ระบุรายละเอียดเพิ่มเติม..."></textarea>
+      <button class="btn-submit" style="background:var(--green-status)" onclick="submitSituationUpdate()">UPDATE SITUATION</button>
+      <button class="btn-submit" style="background:var(--card-border); color:var(--text-main);" onclick="closeModal()">CANCEL</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <!-- GitHub Pages to Apps Script adapter. Existing page markup, styles, and app code are unchanged. -->
+  <script>
+  (function () {
+    'use strict';
+    const GAS_URL = 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_EXEC_URL_HERE';
+    const validURL = /^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec(?:\?.*)?$/.test(GAS_URL);
+    const token = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + Math.random();
+    let bridgeReady = false;
+    let bridgeFrame = null;
+    let serial = 0;
+    const calls = new Map();
+    const queued = [];
+    const launch = () => {
+      if (!validURL || bridgeFrame) return;
+      bridgeFrame = document.createElement('iframe');
+      bridgeFrame.style.display = 'none';
+      bridgeFrame.title = 'Apps Script data connector';
+      const url = new URL(GAS_URL);
+      url.searchParams.set('bridge', '1');
+      url.searchParams.set('origin', window.location.origin);
+      url.searchParams.set('channel', token);
+      bridgeFrame.src = url.toString();
+      document.body.appendChild(bridgeFrame);
+    };
+    function send(request) {
+      if (!bridgeReady || !bridgeFrame || !bridgeFrame.contentWindow) { queued.push(request); return; }
+      bridgeFrame.contentWindow.postMessage({ phoenixBridge: true, channel: token, kind: 'call', ...request }, '*');
+    }
+    window.addEventListener('message', (event) => {
+      if (!bridgeFrame || event.source !== bridgeFrame.contentWindow) return;
+      const data = event.data;
+      if (!data || data.phoenixBridge !== true || data.channel !== token) return;
+      if (data.kind === 'ready') {
+        bridgeReady = true;
+        while (queued.length) send(queued.shift());
+      } else if (data.kind === 'result') {
+        const entry = calls.get(data.id);
+        if (!entry) return;
+        calls.delete(data.id);
+        if (data.ok) { if (entry.success) entry.success(data.value); }
+        else if (entry.failure) entry.failure(new Error(data.error || 'Apps Script call failed'));
+        else console.error('Apps Script:', data.error);
+      }
+    });
+    // Compatible with google.script.run.withSuccessHandler(...).method(...args)
+    function runner(success, failure) {
+      return new Proxy({}, {
+        get: (_target, property) => {
+          if (property === 'withSuccessHandler') return fn => runner(fn, failure);
+          if (property === 'withFailureHandler') return fn => runner(success, fn);
+          if (property === 'withUserObject') return () => runner(success, failure);
+          if (typeof property !== 'string' || property === 'then') return undefined;
+          return (...args) => {
+            if (!validURL) {
+              const err = new Error('Please set GAS_URL in index.html to the Apps Script /exec URL.');
+              if (failure) failure(err); else console.error(err);
+              return;
+            }
+            const id = ++serial;
+            calls.set(id, { success, failure });
+            send({ id, method: property, args });
+          };
+        }
+      });
+    }
+    window.google = window.google || {};
+    window.google.script = window.google.script || {};
+    window.google.script.run = runner(null, null);
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', launch, { once: true });
+    else launch();
+  }());
+  </script>
+  <script>
+    let currentAgent = ""; 
+    let spiesData = []; 
+    let allMissionsData = [];
+    let sitMaster = []; 
+    let curSit = {}; 
+    let selectedSpy = null;
+
+    const OP_LIST = ["สิงห์เหนือ","เสือใต้","อสรพิษคราส","จันทร์ดับ","เงาเดียว","พิทักษ์นภา","ปีกเงา","ตาเหยี่ยว","หมอกเทา","เรดาร์เงียบ","บ่วงเหล็ก","มือเงียบ","กรงฟ้า","ตรึงเงา","สายรัดขาว","ทางลับ","เงาซ้อน","รอยเงียบ","ลมหาย","ม่านหมอก","ม่านดำ","กุญแจเงา","แฟ้มศูนย์","หมึกดำ","รหัสนิ่ง","Black Crow","White Crow","Grey Crow","Red Crow","Silent Crow"];
+    const OP_TYPES = { "สิงห์เหนือ": "เป้าหมายลับ", "เสือใต้": "เป้าหมายลับ", "อสรพิษคราส": "ยุติภัยลับ", "จันทร์ดับ": "วิกฤต", "เงาเดียว": "ลับเดี่ยว", "พิทักษ์นภา": "เฝ้าระวังถาวร", "ปีกเงา": "ข่าวกรอง", "ตาเหยี่ยว": "วิเคราะห์", "หมอกเทา": "สังเกตการณ์", "เรดาร์เงียบ": "ตรวจจับ", "บ่วงเหล็ก": "จับกุม", "มือเงียบ": "ควบคุมลับ", "กรงฟ้า": "คุมพื้นที่", "ตรึงเงา": "คุมสถานการณ์", "สายรัดขาว": "ควบคุมอ่อนไหว", "ทางลับ": "แทรกซึม", "เงาซ้อน": "หลอกลวง", "รอยเงียบ": "แฝงตัว", "ลมหาย": "ถอนตัว", "ม่านหมอก": "ปกปิด", "ม่านดำ": "ปกปิดข้อมูล", "กุญแจเงา": "สิทธิ์ลับ", "แฟ้มศูนย์": "ลบร่องรอย", "หมึกดำ": "เอกสารลับ", "รหัสนิ่ง": "แช่ข้อมูล", "Black Crow": "ลับสุด", "White Crow": "อ่อนไหว", "Grey Crow": "ก้ำกึ่ง", "Red Crow": "วิกฤต", "Silent Crow": "เฝ้าระวังลับ" };
+
+    const THAI_TARGETS = [
+      "เครือข่ายเว็บพนันออนไลน์ ย่านรัชดาภิเษก กรุงเทพฯ",
+      "ขบวนการลักลอบขนยาเสพติด ชายแดน อ.แม่สาย จ.เชียงราย",
+      "กลุ่มแฮกเกอร์จารกรรมข้อมูล ศูนย์ราชการแจ้งวัฒนะ",
+      "การข่าวเคลื่อนไหวสิ่งผิดกฎหมาย ท่าเรือแหลมฉบัง จ.ชลบุรี",
+      "กลุ่มอิทธิพลเถื่อน ย่านพัทยาใต้ จ.ชลบุรี",
+      "การลักลอบนำเข้าสินค้าจารกรรม สนามบินสุวรรณภูมิ",
+      "สถานีส่งสัญญาณสื่อสารความมั่นคง อ.หัวหิน จ.ประจวบคีรีขันธ์",
+      "คลังสินค้าต้องสงสัย ย่านบางนา-ตราด",
+      "ศูนย์ส่งสัญญาณดาวเทียม อ.ศรีราชา",
+      "เส้นทางลำเลียงหลบหนี ชายแดนไทย-เมียนมา ด้าน อ.แม่สอด"
+    ];
+
+    const COMMANDERS_THAI = ["Commander K-9", "Commander Ghost", "Operation Control", "Phoenix HQ", "Central Command"];
+    const CLEARANCES = ["Level 2: CONFIDENTIAL", "Level 3: SECRET", "Level 4: TOP SECRET", "Level 5: COSMIC"];
+
+    // Key Handler
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const active = document.activeElement;
+        if (active.tagName === 'INPUT' || active.tagName === 'SELECT' || active.tagName === 'TEXTAREA') {
+          if (active.tagName === 'TEXTAREA') return;
+          e.preventDefault();
+          if (active.id === 'user') return document.getElementById('pass').focus();
+          if (active.id === 'pass') return doLogin();
+          
+          const fields = Array.from(document.querySelectorAll('input, select, textarea, .btn-submit'));
+          const idx = fields.indexOf(active);
+          if (idx > -1 && idx < fields.length - 1) fields[idx + 1].focus();
+        }
+      }
+    });
+
+    function doLogin() {
+      const u = document.getElementById('user').value.trim(); 
+      const p = document.getElementById('pass').value.trim();
+      if(!u || !p) return Swal.fire('Warning', 'Please fill in both Agent ID and Passphrase', 'warning');
+
+      Swal.fire({ title: 'Authenticating...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+      google.script.run.withSuccessHandler(ok => {
+        if(ok) {
+          google.script.run.withSuccessHandler(name => {
+            currentAgent = name; 
+            document.getElementById('agent-name').innerText = name;
+            document.getElementById('login-screen').style.display = 'none'; 
+            document.getElementById('app-layout').style.display = 'flex';
+            document.getElementById('user-info').style.display = 'block'; 
+            init(); 
+            Swal.close();
+          }).getAdminName(u);
+        } else {
+          Swal.fire('Access Denied', 'Invalid Agent ID or Passphrase', 'error');
+        }
+      }).checkAdminLogin(u, p);
+    }
+
+    function init() { 
+      loadStatus(); 
+      loadMissions(); 
+      loadSpies(); 
+      loadCurrentSit();
+      loadMasterData();
+
+      document.getElementById('opSelect').innerHTML = OP_LIST.map(o => `<option value="${o}">${o}</option>`).join('');
+      updateOpTypeDisplay();
+      
+      setInterval(() => {
+        loadMissions(); 
+        loadStatus(); 
+        loadCurrentSit();
+      }, 10000);
+
+      // เริ่มต้นระบบสร้างภารกิจอัตโนมัติ
+      generateThaiAutoMission();
+      scheduleAutoMissionGenerator();
+    }
+
+    function scheduleAutoMissionGenerator() {
+      const minMs = 15000;  // 15 วินาที
+      const maxMs = 360000; // 6 นาที
+      const randomDelay = Math.floor(Math.random() * (maxMs - minMs + 1)) + minMs;
+
+      setTimeout(() => {
+        generateThaiAutoMission();
+        scheduleAutoMissionGenerator();
+      }, randomDelay);
+    }
+
+    // สร้างภารกิจอัตโนมัติและบันทึกลง Google Sheets
+    function generateThaiAutoMission() {
+      const randomCode = 'PX-' + Math.floor(1000 + Math.random() * 9000);
+      const randomOp = OP_LIST[Math.floor(Math.random() * OP_LIST.length)];
+      const randomTarget = THAI_TARGETS[Math.floor(Math.random() * THAI_TARGETS.length)];
+      const randomCommander = COMMANDERS_THAI[Math.floor(Math.random() * COMMANDERS_THAI.length)];
+      const randomSecurity = CLEARANCES[Math.floor(Math.random() * CLEARANCES.length)];
+
+      const newMissionData = {
+        code: randomCode,
+        opName: randomOp,
+        target: randomTarget,
+        commander: randomCommander,
+        security: randomSecurity,
+        status: 'OPEN',
+        isSpyMission: false,
+        isAuto: true,
+        details: 'ภารกิจแจ้งเตือนฉุกเฉินอัตโนมัติโดยระบบตรวจจับภัยคุกคามในประเทศไทย'
+      };
+
+      // ส่งข้อมูลไปบันทึกลง Google Sheets
+      google.script.run.withSuccessHandler(res => {
+        if(res === "SUCCESS") {
+          loadMissions(); // ดึงข้อมูลใหม่หลังจากบันทึกสำเร็จ
+        }
+      }).deployMission(newMissionData, "");
+    }
+
+    function toggleMissionsDropdown() {
+      const submenu = document.getElementById('missions-submenu');
+      const arrow = document.getElementById('dropdown-arrow');
+      if (submenu.style.display === 'flex') {
+        submenu.style.display = 'none';
+        arrow.innerText = '▼';
+      } else {
+        submenu.style.display = 'flex';
+        arrow.innerText = '▲';
+      }
+    }
+
+    function switchPage(pageId) {
+      document.querySelectorAll('.page-view').forEach(p => p.style.display = 'none');
+      document.querySelectorAll('.nav-btn, .submenu-btn').forEach(b => b.classList.remove('active'));
+
+      document.getElementById(`page-${pageId}`).style.display = 'block';
+
+      if (pageId.startsWith('missions-')) {
+        document.getElementById('nav-missions-parent').classList.add('active');
+        document.getElementById(`nav-${pageId}`).classList.add('active');
+        document.getElementById('missions-submenu').style.display = 'flex';
+        document.getElementById('dropdown-arrow').innerText = '▲';
+      } else {
+        document.getElementById(`nav-${pageId}`).classList.add('active');
+        document.getElementById('missions-submenu').style.display = 'none';
+        document.getElementById('dropdown-arrow').innerText = '▼';
+      }
+    }
+
+    function loadMissions() {
+      google.script.run.withSuccessHandler(data => {
+        if(!data) return;
+        allMissionsData = data;
+        renderMissionsTables(data);
+      }).getAllMissions();
+    }
+
+    function renderMissionsTables(data) {
+      const generalMissions = data.filter(m => !m.isSpyMission);
+      const spyMissions = data.filter(m => m.isSpyMission);
+
+      let total = generalMissions.length;
+      let openCount = generalMissions.filter(m => m.status === 'เปิด' || m.status === 'OPEN').length;
+      let completedCount = generalMissions.filter(m => m.status === 'จบ' || m.status === 'COMPLETED').length;
+
+      document.getElementById('dash-total-ops').innerText = total;
+      document.getElementById('dash-open-ops').innerText = openCount;
+      document.getElementById('dash-completed-ops').innerText = completedCount;
+
+      // 1. ตารางภารกิจทั่วไป (แก้ไขสถานะได้)
+      let editableRowsHtml = generalMissions.map(m => {
+        let displayStatus = m.status;
+        if(m.status === 'เปิด') displayStatus = 'OPEN';
+        if(m.status === 'จบ') displayStatus = 'COMPLETED';
+        if(m.status === 'ล้มเหลว') displayStatus = 'FAILED';
+        if(m.status === 'พักภาระกิจ') displayStatus = 'ON HOLD';
+
+        let statusClass = (displayStatus === 'OPEN' ? 'badge-open' : displayStatus === 'COMPLETED' ? 'badge-completed' : displayStatus === 'FAILED' ? 'badge-failed' : 'badge-hold');
+        
+        let selectOrBadge = (displayStatus === 'COMPLETED' || displayStatus === 'FAILED') 
+          ? `<span class="badge ${statusClass}">${displayStatus}</span>`
+          : `<select class="badge ${statusClass}" onchange="updateMStatus('${m.code}', this.value)">
+              <option value="เปิด" ${displayStatus === 'OPEN' ? 'selected' : ''}>OPEN</option>
+              <option value="จบ">COMPLETED</option>
+              <option value="ล้มเหลว">FAILED</option>
+              <option value="พักภาระกิจ" ${displayStatus === 'ON HOLD' ? 'selected' : ''}>ON HOLD</option>
+             </select>`;
+
+        return `<tr>
+          <td data-label="Code"><b style="color:var(--cyan-bright);">${m.code}</b></td>
+          <td data-label="Operation & Target">
+            <b style="color:var(--cyan-bright)">[${m.type}]</b> <b>${m.name}</b><br>
+            <small style="color:var(--text-muted);"><b>Target:</b> ${m.target}</small>
+          </td>
+          <td data-label="Commander">${m.commander}</td>
+          <td data-label="Security">${m.security}</td>
+          <td data-label="Status">${selectOrBadge}</td>
+        </tr>`;
+      }).join('');
+
+      // 2. ตาราง Read-Only สำหรับ หน้าแรก Dashboard
+      let readOnlyRowsHtml = generalMissions.map(m => {
+        let displayStatus = m.status;
+        if(m.status === 'เปิด') displayStatus = 'OPEN';
+        if(m.status === 'จบ') displayStatus = 'COMPLETED';
+        if(m.status === 'ล้มเหลว') displayStatus = 'FAILED';
+        if(m.status === 'พักภาระกิจ') displayStatus = 'ON HOLD';
+
+        let statusClass = (displayStatus === 'OPEN' ? 'badge-open' : displayStatus === 'COMPLETED' ? 'badge-completed' : displayStatus === 'FAILED' ? 'badge-failed' : 'badge-hold');
+
+        return `<tr>
+          <td data-label="Code"><b style="color:var(--cyan-bright);">${m.code}</b></td>
+          <td data-label="Operation & Target">
+            <b style="color:var(--cyan-bright)">[${m.type}]</b> <b>${m.name}</b><br>
+            <small style="color:var(--text-muted);"><b>Target:</b> ${m.target}</small>
+          </td>
+          <td data-label="Commander">${m.commander}</td>
+          <td data-label="Security">${m.security}</td>
+          <td data-label="Status"><span class="badge ${statusClass}">${displayStatus}</span></td>
+        </tr>`;
+      }).join('');
+
+      // 3. ตารางภารกิจสายลับสำหรับหน้าฐานข้อมูลสายลับ
+      let spyMissionsHtml = spyMissions.map(m => {
+        let displayStatus = m.status;
+        if(m.status === 'เปิด') displayStatus = 'OPEN';
+        if(m.status === 'จบ') displayStatus = 'COMPLETED';
+        if(m.status === 'ล้มเหลว') displayStatus = 'FAILED';
+        if(m.status === 'พักภาระกิจ') displayStatus = 'ON HOLD';
+
+        let statusClass = (displayStatus === 'OPEN' ? 'badge-open' : displayStatus === 'COMPLETED' ? 'badge-completed' : displayStatus === 'FAILED' ? 'badge-failed' : 'badge-hold');
+
+        let selectOrBadge = (displayStatus === 'COMPLETED' || displayStatus === 'FAILED') 
+          ? `<span class="badge ${statusClass}">${displayStatus}</span>`
+          : `<select class="badge ${statusClass}" onchange="updateMStatus('${m.code}', this.value)">
+              <option value="เปิด" ${displayStatus === 'OPEN' ? 'selected' : ''}>OPEN</option>
+              <option value="จบ">COMPLETED</option>
+              <option value="ล้มเหลว">FAILED</option>
+              <option value="พักภาระกิจ" ${displayStatus === 'ON HOLD' ? 'selected' : ''}>ON HOLD</option>
+             </select>`;
+
+        return `<tr>
+          <td data-label="Code"><b style="color:var(--cyan-bright);">${m.code}</b></td>
+          <td data-label="Spy Operation & Target">
+            <b>${m.name}</b><br>
+            <small style="color:var(--text-muted);"><b>Target:</b> ${m.target}</small>
+          </td>
+          <td data-label="Assigned Spy Agent"><b style="color:var(--cyan-bright);">${m.commander}</b></td>
+          <td data-label="Clearance">${m.security}</td>
+          <td data-label="Status">${selectOrBadge}</td>
+        </tr>`;
+      }).join('');
+
+      document.getElementById('m-body').innerHTML = editableRowsHtml;
+      document.getElementById('dash-m-body').innerHTML = readOnlyRowsHtml;
+      document.getElementById('spy-m-body').innerHTML = spyMissionsHtml.length > 0 ? spyMissionsHtml : `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">ยังไม่มีภารกิจสายลับในระบบ</td></tr>`;
+    }
+
+    function loadSpies() {
+      google.script.run.withSuccessHandler(d => {
+        if(!d) return;
+        spiesData = d;
+        document.getElementById('dash-total-spies').innerText = d.length;
+
+        let active = 0, available = 0, standby = 0, undercover = 0, leave = 0, kia = 0;
+        
+        d.forEach(s => {
+          const st = s.status || "";
+          if (st.includes('Active')) active++;
+          else if (st.includes('Available')) available++;
+          else if (st.includes('Standby')) standby++;
+          else if (st.includes('Undercover')) undercover++;
+          else if (st.includes('พักภาระกิจ') || st.includes('Leave')) leave++;
+          else if (st.includes('KIA')) kia++;
+        });
+
+        document.getElementById('spy-stat-active').innerText = active;
+        document.getElementById('spy-stat-available').innerText = available;
+        document.getElementById('spy-stat-standby').innerText = standby;
+        document.getElementById('spy-stat-undercover').innerText = undercover;
+        document.getElementById('spy-stat-leave').innerText = leave;
+        document.getElementById('spy-stat-kia').innerText = kia;
+
+        let readyCount = active + available + undercover;
+        let readinessRate = d.length > 0 ? Math.round((readyCount / d.length) * 100) : 0;
+        document.getElementById('spy-readiness-bar').style.width = `${readinessRate}%`;
+        document.getElementById('spy-readiness-percent').innerText = `${readinessRate}%`;
+
+        document.getElementById('s-grid').innerHTML = d.map((s, i) => {
+          let statusClass = 'spy-status-available';
+          const st = s.status || "";
+
+          if (st.includes('Active')) statusClass = 'spy-status-active';
+          else if (st.includes('Available')) statusClass = 'spy-status-available';
+          else if (st.includes('Standby')) statusClass = 'spy-status-standby';
+          else if (st.includes('Undercover')) statusClass = 'spy-status-undercover';
+          else if (st.includes('พักภาระกิจ') || st.includes('Leave')) statusClass = 'spy-status-leave';
+          else if (st.includes('KIA')) statusClass = 'spy-status-kia';
+
+          return `
+            <div class="spy-card ${statusClass}" onclick="showSpy(${i})">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <b style="color:var(--cyan-bright);">#AGENT ${s.id}</b>
+                <span style="font-size:0.75rem; color:var(--text-muted); background:var(--bg-dark); padding:2px 8px; border-radius:10px; border:1px solid var(--card-border);">${s.field}</span>
+              </div>
+              <div style="font-weight:600; font-size:1.05rem; margin:8px 0; color:var(--text-main);">${s.name}</div>
+              <small style="color:var(--text-muted);">${s.status}</small>
+            </div>
+          `;
+        }).join('');
+      }).getSpyData();
+    }
+
+    async function submitNewSpy() {
+      const id = document.getElementById('newSpyId').value.trim();
+      const name = document.getElementById('newSpyName').value.trim();
+      const skill = document.getElementById('newSpySkill').value.trim();
+      const field = document.getElementById('newSpyField').value.trim();
+      const status = document.getElementById('newSpyStatus').value;
+
+      if(!id || !name) {
+        return Swal.fire('ข้อมูลไม่ครบ', 'กรุณาระบุ Agent ID และ ชื่อสายลับ', 'warning');
+      }
+
+      const { value: pass } = await Swal.fire({ title: 'Verify Admin Passphrase', input: 'password', showCancelButton: true });
+      if(!pass) return;
+
+      google.script.run.withSuccessHandler(res => {
+        if(res === "SUCCESS") {
+          closeModal();
+          loadSpies();
+          Swal.fire('Added', 'เพิ่มสายลับใหม่เข้าฐานข้อมูลเรียบร้อยแล้ว', 'success');
+        } else {
+          Swal.fire('Error', 'Unauthorized or Failed to add spy', 'error');
+        }
+      }).addNewSpyAgent({ id, name, skill, field, status }, pass);
+    }
+
+    function showSpy(i) {
+      selectedSpy = spiesData[i];
+      document.getElementById('sd-name').innerText = selectedSpy.name;
+      document.getElementById('sd-id').innerText = "AGENT ID: " + selectedSpy.id;
+      document.getElementById('sd-skill').innerText = selectedSpy.skill || '-';
+      document.getElementById('sd-field').innerText = selectedSpy.field || '-';
+      
+      const assignedMission = allMissionsData.find(m => m.commander === selectedSpy.name && (m.status === 'เปิด' || m.status === 'OPEN'));
+      const missionContainer = document.getElementById('spy-assigned-mission');
+
+      if (assignedMission) {
+        missionContainer.innerHTML = `
+          <b style="color:var(--cyan-bright)">[${assignedMission.code}] ${assignedMission.name}</b><br>
+          <b>Target:</b> ${assignedMission.target}<br>
+          <b>Clearance:</b> ${assignedMission.security} | <b>Status:</b> <span style="color:var(--cyan-bright)">OPEN</span>
+        `;
+      } else {
+        missionContainer.innerText = "ไม่มีภารกิจที่กำลังปฏิบัติการอยู่";
+      }
+
+      const statusSelect = document.getElementById('spyStatusSelect');
+      statusSelect.value = selectedSpy.status;
+
+      statusSelect.onchange = async () => {
+        const newStatus = statusSelect.value;
+        const { value: pass } = await Swal.fire({ 
+          title: 'Verify Admin Passphrase', 
+          input: 'password', 
+          text: `เปลี่ยนสถานะเป็น: ${newStatus}`,
+          showCancelButton: true 
+        });
+
+        if(!pass) { 
+          statusSelect.value = selectedSpy.status; 
+          return; 
+        }
+
+        google.script.run.withSuccessHandler(res => {
+          if(res === "SUCCESS") { 
+            Swal.fire('Updated', 'อัปเดตสถานะสายลับเรียบร้อย', 'success'); 
+            loadSpies(); 
+            closeModal();
+          } else { 
+            Swal.fire('Error', 'Unauthorized or Failed', 'error'); 
+            statusSelect.value = selectedSpy.status; 
+          }
+        }).updateSpyStatus(selectedSpy.id, newStatus, pass);
+      };
+
+      const btn = document.getElementById('btn-assign-spy');
+      const warn = document.getElementById('spy-warn');
+
+      if (selectedSpy.status.includes('KIA') || selectedSpy.status.includes('พักภาระกิจ')) {
+        btn.classList.add('btn-disabled'); 
+        btn.onclick = null; 
+        warn.style.display = 'block';
+      } else {
+        btn.classList.remove('btn-disabled');
+        warn.style.display = 'none';
+        btn.onclick = () => { 
+          closeModal(); 
+          document.getElementById('target-spy-name').innerText = selectedSpy.name; 
+          openModal('spy-mission-modal'); 
+        };
+      }
+      openModal('spy-det');
+    }
+
+    function loadMasterData() {
+      google.script.run.withSuccessHandler(d => {
+        if(!d) return;
+        sitMaster = d;
+        document.getElementById('master-body').innerHTML = d.map(item => `
+          <tr>
+            <td data-label="Code"><b style="color:var(--cyan-bright);">${item.code}</b></td>
+            <td data-label="English Title">${item.eng}</td>
+            <td data-label="ชื่อภาษาไทย">${item.th}</td>
+            <td data-label="คำอธิบายโปรโตคอล" style="color:var(--text-muted);">${item.des}</td>
+          </tr>
+        `).join('');
+      }).getSituationMasterData();
+    }
+
+    function loadCurrentSit() {
+      google.script.run.withSuccessHandler(d => {
+        if(!d) return;
+        curSit = d;
+        document.getElementById('sit-display').innerText = `${d.code} ${d.eng}`;
+        document.getElementById('sit-th-display').innerText = `(${d.th})`;
+      }).getCurrentSituation();
+    }
+
+    function viewSitDetails() {
+      if(!curSit.code) return;
+      Swal.fire({
+        title: `<span style="color:var(--cyan-bright)">${curSit.code} ${curSit.eng}</span>`,
+        html: `
+          <div style="text-align:left; font-size:0.9rem; line-height:1.6;">
+            <b>ภาษาไทย:</b> ${curSit.th}<br>
+            <b>รายละเอียด:</b> ${curSit.des}
+            <hr style="border:0; border-top:1px solid var(--card-border); margin:10px 0;">
+            <b>บันทึกเพิ่มเติม:</b><br>${curSit.note || '-'}
+          </div>`,
+        confirmButtonColor: 'var(--blue-accent)'
+      });
+    }
+
+    function openSituationUpdateModal() {
+      if(sitMaster.length === 0) {
+        google.script.run.withSuccessHandler(d => {
+          sitMaster = d;
+          renderSitSelectOptions();
+          openModal('sit-modal');
+        }).getSituationMasterData();
+      } else {
+        renderSitSelectOptions();
+        openModal('sit-modal');
+      }
+    }
+
+    function renderSitSelectOptions() {
+      document.getElementById('sitSelect').innerHTML = sitMaster.map(s => `<option value="${s.code}">${s.th} / ${s.eng}</option>`).join('');
+      previewSituation();
+    }
+
+    function previewSituation() {
+      const code = document.getElementById('sitSelect').value;
+      const situation = sitMaster.find(x => x.code === code);
+      document.getElementById('sitPreviewDes').innerText = situation ? situation.des : "-";
+    }
+
+    async function submitSituationUpdate() {
+      const note = document.getElementById('sitNote').value.trim();
+      if(!note) return Swal.fire('ข้อมูลไม่ครบ', 'กรุณาระบุรายละเอียดเพิ่มเติมในช่องบันทึก', 'warning');
+
+      const { value: pass } = await Swal.fire({ title: 'Admin Passphrase', input: 'password', showCancelButton: true });
+      if(!pass) return;
+
+      const code = document.getElementById('sitSelect').value;
+      const situation = sitMaster.find(x => x.code === code);
+
+      google.script.run.withSuccessHandler(res => {
+        if(res === "SUCCESS") { 
+          closeModal(); 
+          loadCurrentSit(); 
+          Swal.fire('Success', 'อัปเดตสถานการณ์ปัจจุบันเรียบร้อย', 'success'); 
+        } else {
+          Swal.fire('Error', 'Unauthorized', 'error');
+        }
+      }).updateCurrentSituation({...situation, note: note}, pass);
+    }
+
+    async function submitMission(isSpy) {
+      const { value: pass } = await Swal.fire({ title: 'Verify Agent Passphrase', input: 'password', showCancelButton: true });
+      if(!pass) return;
+
+      const data = isSpy ? { 
+        isSpyMission: true, 
+        spyName: selectedSpy.name, 
+        opName: document.getElementById('spyOpName').value.trim(), 
+        target: document.getElementById('spyTarget').value.trim(), 
+        details: document.getElementById('spyDetails').value.trim(), 
+        security: document.getElementById('spySecurity').value, 
+        commander: selectedSpy.name 
+      } : { 
+        isSpyMission: false, 
+        opName: document.getElementById('opSelect').value, 
+        target: document.getElementById('mTarget').value.trim(), 
+        details: document.getElementById('mDetails').value.trim(), 
+        security: document.getElementById('mSecurity').value, 
+        commander: currentAgent 
+      };
+
+      if(!data.opName || !data.target) {
+        return Swal.fire('ข้อมูลไม่ครบ', 'กรุณากรอกชื่อปฏิบัติการและเป้าหมาย', 'warning');
+      }
+
+      google.script.run.withSuccessHandler(res => {
+        if(res === "SUCCESS") { 
+          closeModal(); 
+          loadMissions(); 
+          if(isSpy) {
+            switchPage('spies');
+          } else {
+            switchPage('missions-general');
+          }
+          Swal.fire('Deployed', 'เริ่มปฏิบัติการเรียบร้อยแล้ว', 'success'); 
+        } else {
+          Swal.fire('Error', 'Unauthorized or Failed', 'error');
+        }
+      }).deployMission(data, pass);
+    }
+
+    async function updateMStatus(code, val) {
+      const { value: pass } = await Swal.fire({ title: 'Admin Passphrase', input: 'password', showCancelButton: true });
+      if(!pass) { 
+        loadMissions(); 
+        return; 
+      }
+
+      google.script.run.withSuccessHandler(res => {
+        if(res === "SUCCESS") {
+          loadMissions();
+        } else {
+          Swal.fire('Error', 'Unauthorized', 'error');
+          loadMissions();
+        }
+      }).updateMissionStatus(code, val, pass);
+    }
+
+    async function submitStatusBoth() {
+      const { value: pass } = await Swal.fire({ title: 'System Override Passphrase', input: 'password', showCancelButton: true });
+      if(!pass) return;
+
+      const centerCode = document.getElementById('st-code-center').value;
+      const orgCode = document.getElementById('st-code-org').value;
+
+      Swal.fire({ title: 'Updating Systems...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+      google.script.run.withSuccessHandler(resCenter => {
+        if(resCenter === "SUCCESS") {
+          google.script.run.withSuccessHandler(resOrg => {
+            if(resOrg === "SUCCESS") {
+              closeModal();
+              loadStatus();
+              Swal.fire('Updated', 'อัปเดตสภาวะศูนย์และสถานะองค์กรเรียบร้อยแล้ว', 'success');
+            } else {
+              Swal.fire('Error', 'Failed to update Organization Status', 'error');
+            }
+          }).updateSystemStatus('org', orgCode, pass);
+        } else {
+          Swal.fire('Error', 'Unauthorized or Failed to update Center Condition', 'error');
+        }
+      }).updateSystemStatus('center', centerCode, pass);
+    }
+
+    function updateOpTypeDisplay() {
+      const op = document.getElementById('opSelect').value;
+      document.getElementById('opTypeText').innerText = OP_TYPES[op] || "-";
+    }
+
+    function loadStatus() { 
+      google.script.run.withSuccessHandler(s => { 
+        if(s) {
+          document.getElementById('c-status').innerText = s.center; 
+          document.getElementById('o-status').innerText = s.org; 
+        }
+      }).getFullStatus(); 
+    }
+
+    function openModal(id) { 
+      document.getElementById(id).style.display = 'flex'; 
+    }
+
+    function closeModal() { 
+      document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); 
+      document.querySelectorAll('.modal input, .modal textarea').forEach(i => i.value = '');
+    }
+  </script>
+</body>
+</html>
