@@ -822,14 +822,24 @@
   <script>
   (function () {
     'use strict';
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwU-4dQ67f5GY4vDeqM1Y55Uk5QW-Q40BxLhp-tgw2ynglIYvmBqpIUK7pi8C_UC0qmag/exec';
+    const GAS_URL = 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_EXEC_URL_HERE';
     const validURL = /^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec(?:\?.*)?$/.test(GAS_URL);
+    window.__PHOENIX_GAS_VALID_URL__ = validURL;
     const token = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + Math.random();
     let bridgeReady = false;
     let bridgeFrame = null;
     let serial = 0;
     const calls = new Map();
     const queued = [];
+    const BRIDGE_TIMEOUT_MS = 15000;
+    function failCall(id, message) {
+      const entry = calls.get(id);
+      if (!entry) return;
+      calls.delete(id);
+      clearTimeout(entry.timer);
+      if (entry.failure) entry.failure(new Error(message));
+      else console.error('Phoenix connector:', message);
+    }
     const launch = () => {
       if (!validURL || bridgeFrame) return;
       bridgeFrame = document.createElement('iframe');
@@ -857,6 +867,7 @@
         const entry = calls.get(data.id);
         if (!entry) return;
         calls.delete(data.id);
+        clearTimeout(entry.timer);
         if (data.ok) { if (entry.success) entry.success(data.value); }
         else if (entry.failure) entry.failure(new Error(data.error || 'Apps Script call failed'));
         else console.error('Apps Script:', data.error);
@@ -877,7 +888,8 @@
               return;
             }
             const id = ++serial;
-            calls.set(id, { success, failure });
+            const timer = setTimeout(() => failCall(id, 'หมดเวลารอการเชื่อมต่อ Google Apps Script โปรดตรวจสอบ URL /exec, สิทธิ์การเข้าถึง Web App และ Bridge.html'), BRIDGE_TIMEOUT_MS);
+            calls.set(id, { success, failure, timer });
             send({ id, method: property, args });
           };
         }
@@ -935,27 +947,29 @@
     });
 
     function doLogin() {
-      const u = document.getElementById('user').value.trim(); 
+      const u = document.getElementById('user').value.trim();
       const p = document.getElementById('pass').value.trim();
-      if(!u || !p) return Swal.fire('Warning', 'Please fill in both Agent ID and Passphrase', 'warning');
-
+      if (!u || !p) return Swal.fire('Warning', 'Please fill in both Agent ID and Passphrase', 'warning');
+      if (!window.__PHOENIX_GAS_VALID_URL__) {
+        return Swal.fire('ตั้งค่าการเชื่อมต่อไม่ครบ', 'กรุณาใส่ URL Web App ของ Google Apps Script ที่ลงท้ายด้วย /exec ใน index.html ก่อนใช้งาน', 'error');
+      }
       Swal.fire({ title: 'Authenticating...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-
+      const loginError = err => Swal.fire('เชื่อมต่อไม่สำเร็จ', (err && err.message) || 'ไม่สามารถติดต่อ Apps Script ได้', 'error');
       google.script.run.withSuccessHandler(ok => {
-        if(ok) {
+        if (ok) {
           google.script.run.withSuccessHandler(name => {
-            currentAgent = name; 
+            currentAgent = name;
             document.getElementById('agent-name').innerText = name;
-            document.getElementById('login-screen').style.display = 'none'; 
+            document.getElementById('login-screen').style.display = 'none';
             document.getElementById('app-layout').style.display = 'flex';
-            document.getElementById('user-info').style.display = 'block'; 
-            init(); 
+            document.getElementById('user-info').style.display = 'block';
+            init();
             Swal.close();
-          }).getAdminName(u);
+          }).withFailureHandler(loginError).getAdminName(u);
         } else {
           Swal.fire('Access Denied', 'Invalid Agent ID or Passphrase', 'error');
         }
-      }).checkAdminLogin(u, p);
+      }).withFailureHandler(loginError).checkAdminLogin(u, p);
     }
 
     function init() { 
