@@ -822,11 +822,12 @@
   <script>
   (function () {
     'use strict';
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycbwU-4dQ67f5GY4vDeqM1Y55Uk5QW-Q40BxLhp-tgw2ynglIYvmBqpIUK7pi8C_UC0qmag/exec';
+    const GAS_URL = 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_EXEC_URL_HERE';
     const validURL = /^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec(?:\?.*)?$/.test(GAS_URL);
     window.__PHOENIX_GAS_VALID_URL__ = validURL;
     const token = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + Math.random();
     let bridgeReady = false;
+    let bridgeWindow = null;
     let bridgeFrame = null;
     let serial = 0;
     const calls = new Map();
@@ -853,14 +854,15 @@
       document.body.appendChild(bridgeFrame);
     };
     function send(request) {
-      if (!bridgeReady || !bridgeFrame || !bridgeFrame.contentWindow) { queued.push(request); return; }
-      bridgeFrame.contentWindow.postMessage({ phoenixBridge: true, channel: token, kind: 'call', ...request }, '*');
+      if (!bridgeReady || !bridgeWindow) { queued.push(request); return; }
+      bridgeWindow.postMessage({ phoenixBridge: true, channel: token, kind: 'call', ...request }, '*');
     }
     window.addEventListener('message', (event) => {
-      if (!bridgeFrame || event.source !== bridgeFrame.contentWindow) return;
+      if (!bridgeFrame || !/^https:\/\/(?:script\.google\.com|[a-z0-9.-]+\.googleusercontent\.com)$/.test(event.origin)) return;
       const data = event.data;
       if (!data || data.phoenixBridge !== true || data.channel !== token) return;
       if (data.kind === 'ready') {
+        bridgeWindow = event.source;
         bridgeReady = true;
         while (queued.length) send(queued.shift());
       } else if (data.kind === 'result') {
