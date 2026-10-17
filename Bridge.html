@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Phoenix Command Connector</title></head>
+<body><script>
+(function () {
+  'use strict';
+  // Filled by Apps Script HtmlService template, not by GitHub.
+  const parentOrigin = <?!= JSON.stringify(bridgeOrigin) ?>;
+  const channel = <?!= JSON.stringify(bridgeChannel) ?>;
+  const allow = new Set([
+    'checkAdminLogin', 'getAdminName', 'getAllMissions', 'deployMission',
+    'updateMissionStatus', 'getSpyData', 'addNewSpyAgent', 'updateSpyStatus',
+    'getFullStatus', 'updateSystemStatus', 'getCurrentSituation',
+    'updateCurrentSituation', 'getSituationMasterData'
+  ]);
+  if (!/^https:\/\/[^/]+$/.test(parentOrigin) || !channel) return;
+  function respond(payload) {
+    const message = Object.assign({ phoenixBridge: true, channel }, payload);
+    // On Google HtmlService deployments the user HTML may be one iframe deep.
+    // Notify both outer app window and its immediate embedding frame.
+    if (window.top !== window) window.top.postMessage(message, parentOrigin);
+    if (window.parent !== window && window.parent !== window.top) window.parent.postMessage(message, '*');
+  }
+  function onMessage(event) {
+    const msg = event.data;
+    if (!msg || msg.phoenixBridge !== true || msg.channel !== channel) return;
+    // Calls are only accepted from the specific website embedding this Web App.
+    if (event.origin !== parentOrigin || (event.source !== window.top && event.source !== window.parent)) return;
+    if (msg.kind === 'ping') { respond({ kind: 'ready' }); return; }
+    if (msg.kind !== 'call') return;
+    if (!allow.has(msg.method)) return respond({ kind: 'result', id: msg.id, ok: false, error: 'Method not allowed' });
+    try {
+      const runner = google.script.run
+        .withSuccessHandler(value => respond({ kind: 'result', id: msg.id, ok: true, value }))
+        .withFailureHandler(err => respond({ kind: 'result', id: msg.id, ok: false, error: String(err && err.message || err) }));
+      runner[msg.method].apply(runner, Array.isArray(msg.args) ? msg.args : []);
+    } catch (err) {
+      respond({ kind: 'result', id: msg.id, ok: false, error: String(err && err.message || err) });
+    }
+  }
+  window.addEventListener('message', onMessage);
+  respond({ kind: 'ready' });
+  let remaining = 12;
+  const timer = setInterval(() => {
+    if (--remaining <= 0) clearInterval(timer);
+    else respond({ kind: 'ready' });
+  }, 1500);
+}());
+</script></body></html>

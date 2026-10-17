@@ -818,7 +818,7 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <!-- GitHub Pages to Apps Script adapter. Existing page markup, styles, and app code are unchanged. -->
+  <!-- Phoenix GitHub Pages / Apps Script connector; original UI and features retained. -->
   <script>
   (function () {
     'use strict';
@@ -826,13 +826,11 @@
     const validURL = /^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec(?:\?.*)?$/.test(GAS_URL);
     window.__PHOENIX_GAS_VALID_URL__ = validURL;
     const token = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + Math.random();
-    let bridgeReady = false;
-    let bridgeWindow = null;
-    let bridgeFrame = null;
-    let serial = 0;
     const calls = new Map();
-    const queued = [];
-    const BRIDGE_TIMEOUT_MS = 15000;
+    let bridgeReady = false, bridgeWindow = null, bridgeFrame = null, serial = 0;
+    let lastError = '';
+    const BRIDGE_TIMEOUT_MS = 45000;
+    const CONNECT_RETRY_MS = 3500;
     function failCall(id, message) {
       const entry = calls.get(id);
       if (!entry) return;
@@ -841,31 +839,54 @@
       if (entry.failure) entry.failure(new Error(message));
       else console.error('Phoenix connector:', message);
     }
-    const launch = () => {
+    function send(request) {
+      if (!bridgeReady || !bridgeWindow) return;
+      bridgeWindow.postMessage({ phoenixBridge: true, channel: token, kind: 'call', ...request }, '*');
+    }
+    function launch() {
       if (!validURL || bridgeFrame) return;
       bridgeFrame = document.createElement('iframe');
       bridgeFrame.style.display = 'none';
-      bridgeFrame.title = 'Apps Script data connector';
+      bridgeFrame.setAttribute('aria-hidden', 'true');
+      bridgeFrame.title = 'Phoenix Apps Script connector';
       const url = new URL(GAS_URL);
       url.searchParams.set('bridge', '1');
       url.searchParams.set('origin', window.location.origin);
       url.searchParams.set('channel', token);
       bridgeFrame.src = url.toString();
+      bridgeFrame.addEventListener('error', () => { lastError = 'โหลด Apps Script iframe ไม่สำเร็จ'; });
       document.body.appendChild(bridgeFrame);
-    };
-    function send(request) {
-      if (!bridgeReady || !bridgeWindow) { queued.push(request); return; }
-      bridgeWindow.postMessage({ phoenixBridge: true, channel: token, kind: 'call', ...request }, '*');
     }
-    window.addEventListener('message', (event) => {
+    function ping() {
+      if (bridgeReady || !bridgeFrame) return;
+      try {
+        // HtmlService can embed its user page inside an additional Google sandbox iframe.
+        // Send discovery to both levels; the true Bridge responds with its own window ref.
+        bridgeFrame.contentWindow.postMessage({ phoenixBridge: true, channel: token, kind: 'ping' }, '*');
+        for (let i = 0; i < bridgeFrame.contentWindow.frames.length; i++) {
+          bridgeFrame.contentWindow.frames[i].postMessage({ phoenixBridge: true, channel: token, kind: 'ping' }, '*');
+        }
+      } catch (_) { /* Cross-origin frame enumeration can be blocked. Bridge will announce itself. */ }
+    }
+    function retryConnection() {
+      if (bridgeReady || !bridgeFrame) return;
+      ping();
+    }
+    window.addEventListener('message', event => {
       if (!bridgeFrame || !/^https:\/\/(?:script\.google\.com|[a-z0-9.-]+\.googleusercontent\.com)$/.test(event.origin)) return;
       const data = event.data;
       if (!data || data.phoenixBridge !== true || data.channel !== token) return;
       if (data.kind === 'ready') {
         bridgeWindow = event.source;
         bridgeReady = true;
-        while (queued.length) send(queued.shift());
-      } else if (data.kind === 'result') {
+        lastError = '';
+        // Confirm handshake and dispatch pending requests. Timer remains active until response.
+        bridgeWindow.postMessage({ phoenixBridge: true, channel: token, kind: 'ack' }, '*');
+        for (const [id, entry] of calls) if (!entry.sent) {
+          entry.sent = true;
+          send({ id, method: entry.method, args: entry.args });
+        }
+      } else if (data.kind === 'result' && event.source === bridgeWindow) {
         const entry = calls.get(data.id);
         if (!entry) return;
         calls.delete(data.id);
@@ -875,24 +896,31 @@
         else console.error('Apps Script:', data.error);
       }
     });
-    // Compatible with google.script.run.withSuccessHandler(...).method(...args)
+    setInterval(retryConnection, CONNECT_RETRY_MS);
     function runner(success, failure) {
       return new Proxy({}, {
-        get: (_target, property) => {
+        get: (_, property) => {
           if (property === 'withSuccessHandler') return fn => runner(fn, failure);
           if (property === 'withFailureHandler') return fn => runner(success, fn);
           if (property === 'withUserObject') return () => runner(success, failure);
           if (typeof property !== 'string' || property === 'then') return undefined;
           return (...args) => {
             if (!validURL) {
-              const err = new Error('Please set GAS_URL in index.html to the Apps Script /exec URL.');
-              if (failure) failure(err); else console.error(err);
+              const error = new Error('กรุณากำหนด URL ของ Apps Script Deployment ให้ลงท้ายด้วย /exec');
+              if (failure) failure(error); else console.error(error);
               return;
             }
+            launch();
             const id = ++serial;
-            const timer = setTimeout(() => failCall(id, 'หมดเวลารอการเชื่อมต่อ Google Apps Script โปรดตรวจสอบ URL /exec, สิทธิ์การเข้าถึง Web App และ Bridge.html'), BRIDGE_TIMEOUT_MS);
-            calls.set(id, { success, failure, timer });
-            send({ id, method: property, args });
+            const timer = setTimeout(() => {
+              const detail = !bridgeReady
+                ? 'Bridge ไม่ตอบรับจาก Apps Script: ตรวจสอบว่าได้สร้างไฟล์ Bridge.html และ Deploy เวอร์ชันใหม่แล้ว รวมถึงตั้ง Who has access = Anyone (หรือสิทธิ์ที่เหมาะสม). ' + lastError
+                : 'Apps Script ไม่ตอบกลับคำสั่ง: ตรวจสอบ Executions, สิทธิ์ Sheets และการทำงานของฟังก์ชัน';
+              failCall(id, detail);
+            }, BRIDGE_TIMEOUT_MS);
+            calls.set(id, { success, failure, timer, method: property, args, sent: bridgeReady });
+            if (bridgeReady) send({ id, method: property, args });
+            else ping();
           };
         }
       });
@@ -900,6 +928,7 @@
     window.google = window.google || {};
     window.google.script = window.google.script || {};
     window.google.script.run = runner(null, null);
+    window.__phoenixConnectorStatus = () => ({ ready: bridgeReady, iframe: !!bridgeFrame, error: lastError, url: GAS_URL });
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', launch, { once: true });
     else launch();
   }());
